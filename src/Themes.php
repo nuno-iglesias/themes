@@ -220,6 +220,41 @@ class Themes
 		return $this->viewFactory->make($this->getView($view), $data);
 	}
 
+
+    public function partialView($view, $data = array())
+    {
+        $segments = explode('::', $view);
+        $theme    = null;
+
+        if (count($segments) == 2  ) {
+
+            list($theme, $viewName) = $segments;
+            if($theme=="Theme"){
+                $currentTheme=  $this->getActive();
+                $parentTheme= $this->getProperty($currentTheme.'::parent');
+                $themes=array();
+                array_push($themes,$currentTheme);
+                if($parentTheme!=null)
+                    array_push($themes,$parentTheme);
+
+                $views = [
+                    'theme'  => $this->getThemeNamespace($viewName),
+                    'parent' => $this->getThemeNamespace($viewName, $parentTheme),
+                    'base'   => $viewName
+                ];
+
+
+                foreach ($views as $view) {
+                    if ($this->viewFactory->exists($view)) {
+                        return $view;
+                    }
+                }
+                return false;            }
+        } else {
+            $asset = $segments[0];
+        }
+    }
+
 	/**
 	 * Checks if the given view file exists (anywhere).
 	 *
@@ -361,6 +396,36 @@ class Themes
 	{
 		$segments = explode('::', $asset);
 		$theme    = null;
+
+        //This function allows the search of assets in the current theme and it parent (if exists)
+        //TODO: Added recursive call to get all ancestors of a theme
+        if (count($segments) == 2  ) {
+            list($theme, $asset) = $segments;
+            if($theme=="Theme"){
+                $currentTheme=  $this->getActive();
+                $parentTheme= $this->getProperty($currentTheme.'::parent');
+                $themes=array();
+                array_push($themes,$currentTheme);
+                if($parentTheme!=null)
+                    array_push($themes,$parentTheme);
+                foreach($themes as $theme){
+                    //Add a
+                    $themeAssetURL = url($this->config->get('themes.paths.base').'/'.$theme .'/'.$this->config->get('themes.paths.assets').'/'.$asset);
+                    $themeAssetPath= public_path().'/'.$this->config->get('themes.paths.base').'/'.$theme .'/'.$this->config->get('themes.paths.assets').'/'.$asset;
+                    $assetPossibleLocation[$theme]=[$themeAssetURL,$themeAssetPath];
+                }
+
+                foreach($assetPossibleLocation as $location){
+                    if(file_exists($location[1])) {
+                        #dd($location[0]);
+                        return $location[0];
+                    }
+                }
+            }
+        } else {
+            $asset = $segments[0];
+        }
+
 
 		if (count($segments) == 2) {
 			list($theme, $asset) = $segments;
