@@ -177,23 +177,43 @@ class Themes
 		return $this;
 	}
 
-	/**
-	 * Gets the given view file.
-	 *
-	 * @param  string  $view
-	 * @return string|null
-	 */
-	public function getView($view)
-	{
-		$activeTheme = $this->getActive();
-		$parent      = $this->getProperty($activeTheme.'::parent');
+    /**
+     * Gets the given view file.
+     * If the view name first token is a "module" namespace (f.e: sitepages::pages.about)
+     * the search will be like:
+     *          * Current Theme views folder
+     *          * Parent theme views folder
+     *          * Module theme views folder
+     *          * Default views folder
+     * The first found will be returned
+     *
+     * @param  string  $view
+     * @return string|null
+     */
+    public function getView($view)
+    {
+        $activeTheme = $this->getActive();
+        $parent      = $this->getProperty($activeTheme.'::parent');
 
-		$views = [
-			'theme'  => $this->getThemeNamespace($view),
-			'parent' => $this->getThemeNamespace($view, $parent),
-			'module' => $this->getModuleView($view),
-			'base'   => $view
-		];
+        $views = [
+            'theme'  => $this->getThemeNamespace($view),
+            'parent' => $this->getThemeNamespace($view, $parent),
+            'module' => $this->getModuleView($view),
+            'thememodule' => $this->getThemeModuleNamespace($view),
+            'thememoduleparent' => $this->getThemeModuleNamespace($view, $parent),
+            'base'   => $view
+        ];
+
+//        Log::info("THEMES:: getView  ",[$view]);
+//		//DEBUG: Print template search result
+//        foreach ($views as $view) {
+//            Log::info("\tSearchching   ",[$view]);
+//            if ($this->viewFactory->exists($view)) {
+//                Log::info("\tFound    ");
+//            }else{
+//                Log::info("\tNot Found    ");
+//            }
+//        }
 
 		foreach ($views as $view) {
 			if ($this->viewFactory->exists($view)) {
