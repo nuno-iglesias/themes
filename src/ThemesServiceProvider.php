@@ -27,7 +27,7 @@ class ThemesServiceProvider extends ServiceProvider {
 
         Blade::directive('includeFromTheme', function($view) {
             $currentView =Theme::partialView($view);
-            return  "<?php echo \$__env->make( '$currentView' )->render(); ?>";
+            return  "<?php echo \$__env->make( '$currentView', array_except(get_defined_vars(), array('__data', '__path')) )->render(); ?>";
         });
     }
 
